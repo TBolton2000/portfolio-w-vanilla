@@ -4,6 +4,7 @@ import { Matrix4, Object3D } from "three";
 const colorsEnum = ["WHITE", "RED", "BLUE", "ORANGE", "GREEN", "YELLOW"];
 
 const sideLength = 10;
+const epsilon = 0.01;
 
 function createBoxWithRoundedEdges( width, height, depth, radius0, smoothness ) {
     let shape = new THREE.Shape();
@@ -40,37 +41,37 @@ class Cubit extends THREE.Mesh {
         this.position.z = z * sideLength;
 
         // Add stickers
-        if (x < 0)
+        if (x < -epsilon)
             this.add(Sticker.getStickerMesh(1));
-        if (x > 0) 
+        if (x > epsilon) 
             this.add(Sticker.getStickerMesh(3));
-        if (y < 0)
+        if (y < -epsilon)
             this.add(Sticker.getStickerMesh(0));
-        if (y > 0)
+        if (y > epsilon)
             this.add(Sticker.getStickerMesh(5));
-        if (z < 0)
+        if (z < -epsilon)
             this.add(Sticker.getStickerMesh(2));
-        if (z > 0) 
+        if (z > epsilon) 
             this.add(Sticker.getStickerMesh(4));
     }
 
-    turnX = (dir) => {
-        const newY = -dir*this.position.z;
-        const newZ = dir*this.position.y;
+    turnX = (dir, angle) => {
+        const newY = dir*this.position.y*Math.cos(angle) - dir*this.position.z*Math.sin(angle);
+        const newZ = dir*this.position.y*Math.sin(angle) + dir*this.position.z*Math.cos(angle);
         this.position.set(this.position.x, newY, newZ);
-        this.rotateOnWorldAxis(new THREE.Vector3(1,0,0), dir*Math.PI/2);
+        this.rotateOnWorldAxis(new THREE.Vector3(1,0,0), dir*angle);
     }
 
-    turnY = (dir) => {
-        const newX = dir*this.position.z;
-        const newZ = -dir*this.position.x;
+    turnY = (dir, angle) => {
+        const newX = dir*this.position.z*Math.sin(angle) + dir*this.position.x*Math.cos(angle);
+        const newZ = dir*this.position.z*Math.cos(angle) - dir*this.position.x*Math.sin(angle);
         this.position.set(newX, this.position.y, newZ);
         this.rotateOnWorldAxis(new THREE.Vector3(0,1,0), dir*Math.PI/2)
     }
 
-    turnZ = (dir) => {
-        const newX = -dir*this.position.y;
-        const newY = dir*this.position.x;
+    turnZ = (dir, angle) => {
+        const newX = dir*this.position.x*Math.cos(angle) - dir*this.position.y*Math.sin(angle);
+        const newY = dir*this.position.x*Math.sin(angle) + dir*this.position.y*Math.cos(angle);
         this.position.set(newX, newY, this.position.z)
         this.rotateOnWorldAxis(new THREE.Vector3(0,0,1), dir*Math.PI/2)
     }
@@ -149,32 +150,44 @@ export class RubiksCube extends THREE.Object3D {
     }
 
     turnX(slice, direction) {
-        for (let qb of this.cubits)
-        {
-            if (slice === -1 && qb.position.x < 0)
-                qb.turnX(direction);
-            if (slice === 1 && qb.position.x > 0)
-                qb.turnX(direction);
-        }
+        this.turnXRadians(slice, direction, Math.PI/2);
     }
 
     turnY(slice, direction) {
-        for (let qb of this.cubits)
-        {
-            if (slice === -1 && qb.position.y < 0)
-                qb.turnY(direction);
-            if (slice === 1 && qb.position.y > 0)
-                qb.turnY(direction);
-        }
+        this.turnYRadians(slice, direction, Math.PI/2);
     }
 
     turnZ(slice, direction) {
+        this.turnZRadians(slice, direction, Math.PI/2);
+    }
+
+    turnXRadians(slice, direction, radians) {
         for (let qb of this.cubits)
         {
-            if (slice === -1 && qb.position.z < 0)
-                qb.turnZ(direction);
-            if (slice === 1 && qb.position.z > 0)
-                qb.turnZ(direction);
+            if (slice === -1 && qb.position.x < -epsilon)
+                qb.turnX(direction, radians);
+            if (slice === 1 && qb.position.x > epsilon)
+                qb.turnX(direction, radians);
+        }
+    }
+
+    turnYRadians(slice, direction, radians) {
+        for (let qb of this.cubits)
+        {
+            if (slice === -1 && qb.position.y < -epsilon)
+                qb.turnY(direction, radians);
+            if (slice === 1 && qb.position.y > epsilon)
+                qb.turnY(direction, radians);
+        }
+    }
+
+    turnZRadians(slice, direction, radians) {
+        for (let qb of this.cubits)
+        {
+            if (slice === -1 && qb.position.z < -epsilon)
+                qb.turnZ(direction, radians);
+            if (slice === 1 && qb.position.z > epsilon)
+                qb.turnZ(direction, radians);
         }
     }
 

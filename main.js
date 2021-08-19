@@ -49,7 +49,7 @@ function animate() {
 //   cube.rotation.x += 0.01;
 //   cube.rotation.y += 0.005;
 //   cube.rotation.z += 0.01;
-  
+//   rubiksCube.turnXRadians(-1,1,Math.PI/96);
   // controls.update();
 
   renderer.render(scene, camera);
